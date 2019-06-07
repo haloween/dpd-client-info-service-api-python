@@ -355,7 +355,7 @@ class DPDAPI(object):
 
         return addressPayload
     
-    def servicesPayload(self, 
+    def getServicesPayload(self, 
             carryIn=False, #carry in service - left for reference
             cod=False, codCurrency='PLN', #Cash On Delivery - specify amount
             cud=False, #Collecy upon Delivery
@@ -501,8 +501,44 @@ class DPDAPI(object):
             servicesPayload.tiresExport = self['serviceTiresExportOpenUMLFeV1']  
 
         return servicesPayload
+    
+    PAYER_TYPE = ['SENDER', 'RECEIVER', 'THIRD_PARTY']
 
-    def GenerateSingleParcelShipment(self, openUMLFeV3, langCode='PL'):
+    def GenerateSingleParcelShipment(self, 
+            parcelData, 
+            recieverData, 
+            servicesData, 
+            senderData,
+            payerType = 'SENDER',
+            ref1 = None,
+            ref2 = None,
+            ref3 = None,
+            reference = None,
+            thirdPartyFID = None,
+            langCode='PL'
+        ):
+
+        if payerType not in self.PAYER_TYPE:
+            raise ValueError('payerType should be one of %s' % ",".join(self.PAYER_TYPE))
+
+        openUMLFeV3 = self['openUMLFeV3']
+
+        packageOpenUMLFeV3 = self['packageOpenUMLFeV3']
+
+        packageOpenUMLFeV3.parcels = self.getPackagePayload(**parcelData)
+        packageOpenUMLFeV3.receiver = self.getAdressPayload(**recieverData)
+        packageOpenUMLFeV3.services = self.getServicesPayload(**servicesData)
+        packageOpenUMLFeV3.sender = self.getAdressPayload(**senderData)
+        
+        packageOpenUMLFeV3.payerType = self.get_from_factory('payerTypeEnumOpenUMLFeV1')(payerType)
+
+        ref1 and setattr(packageOpenUMLFeV3, 'ref1', ref1)
+        ref2 and setattr(packageOpenUMLFeV3, 'ref2', ref2)
+        ref3 and setattr(packageOpenUMLFeV3, 'ref3', ref3)
+        reference and setattr(packageOpenUMLFeV3, 'reference', reference)
+        thirdPartyFID and setattr(packageOpenUMLFeV3, 'thirdPartyFID', thirdPartyFID)
+        
+        openUMLFeV3.packages = [packageOpenUMLFeV3]
 
         return self.generatePackagesNumbersV4(
             openUMLFeV3, self.generationPolicyPayload,
