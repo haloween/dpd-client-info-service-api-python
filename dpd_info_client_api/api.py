@@ -356,24 +356,24 @@ class DPDAPI(object):
         return addressPayload
     
     def getServicesPayload(self, 
-            carryIn=False, #carry in service - left for reference
-            cod=False, codCurrency='PLN', #Cash On Delivery - specify amount
-            cud=False, #Collecy upon Delivery
-            declaredValue=None, declaredValueCurrency='PLN', #Declared Parcel Value 
-            dedicatedDelivery=False,
-            documentsInternational=False,
-            dox=False,
-            dpdExpress=False,
-            dpdPickup=False,
-            duty=None, dutyCurrency='PLN', #DUTY
-            guarantee=False, guaranteeValue=None,
-            inPers=False,
-            pallet=False,
-            privPers=False,
-            rod=False,
-            selfCol=False,
-            tires=False,
-            tiresExport=False
+            carryIn = False, #carry in service - left for reference
+            cod = False, codCurrency='PLN', #Cash On Delivery - specify amount
+            cud = False, #Collecy upon Delivery
+            declaredValue = None, declaredValueCurrency='PLN', #Declared Parcel Value 
+            dedicatedDelivery = False,
+            documentsInternational = False,
+            dox = False,
+            dpdExpress = False,
+            dpdPickup = False,
+            duty = None, dutyCurrency = 'PLN', #DUTY
+            guarantee = False, guaranteeValue = None,
+            inPers = False,
+            pallet = False,
+            privPers = False,
+            rod = False,
+            selfCol = False,
+            tires = False,
+            tiresExport = False
         ):
         '''
             <xs:complexType name="servicesOpenUMLFeV4">
@@ -515,7 +515,7 @@ class DPDAPI(object):
             ref3 = None,
             reference = None,
             thirdPartyFID = None,
-            langCode='PL'
+            langCode = 'PL'
         ):
 
         if payerType not in self.PAYER_TYPE:
