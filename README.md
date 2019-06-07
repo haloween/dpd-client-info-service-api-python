@@ -2,4 +2,4 @@
 Python API Client Library for DPD Info and Client service in Poland.  It allows parcel / shipping label generation and parcel tracking.
 
 
-It's unfinished ! :)
+It's totally unfinished ! :)
