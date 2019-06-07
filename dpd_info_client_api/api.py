@@ -354,17 +354,161 @@ class DPDAPI(object):
             setattr(addressPayload, k, v)
 
         return addressPayload
-
-    def GenerateSingleParcelShipment(self):
-        '''
-
-        '''
-
-        uml = da['openUMLFeV3']
-
-
-        pass
     
+    def servicesPayload(self, 
+            carryIn=False, #carry in service - left for reference
+            cod=False, codCurrency='PLN', #Cash On Delivery - specify amount
+            cud=False, #Collecy upon Delivery
+            declaredValue=None, declaredValueCurrency='PLN', #Declared Parcel Value 
+            dedicatedDelivery=False,
+            documentsInternational=False,
+            dox=False,
+            dpdExpress=False,
+            dpdPickup=False,
+            duty=None, dutyCurrency='PLN', #DUTY
+            guarantee=False, guaranteeValue=None,
+            inPers=False,
+            pallet=False,
+            privPers=False,
+            rod=False,
+            selfCol=False,
+            tires=False,
+            tiresExport=False
+        ):
+        '''
+            <xs:complexType name="servicesOpenUMLFeV4">
+                <xs:sequence>
+                    <xs:element name="carryIn" type="tns:serviceCarryInOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="cod" type="tns:serviceCODOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="cud" type="tns:serviceCUDOpenUMLeFV1" minOccurs="0"/>
+                    <xs:element name="declaredValue" type="tns:serviceDeclaredValueOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="dedicatedDelivery" type="tns:serviceDedicatedDeliveryOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="documentsInternational" type="tns:serviceFlagOpenUMLF" minOccurs="0"/>
+                    <xs:element name="dox" type="tns:servicePalletOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="dpdExpress" type="tns:serviceFlagOpenUMLF" minOccurs="0"/>
+                    <xs:element name="dpdPickup" type="tns:serviceDpdPickupOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="duty" type="tns:serviceDutyOpenUMLeFV2" minOccurs="0"/>
+                    <xs:element name="guarantee" type="tns:serviceGuaranteeOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="inPers" type="tns:serviceInPersOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="pallet" type="tns:servicePalletOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="privPers" type="tns:servicePrivPersOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="rod" type="tns:serviceRODOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="selfCol" type="tns:serviceSelfColOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="tires" type="tns:serviceTiresOpenUMLFeV1" minOccurs="0"/>
+                    <xs:element name="tiresExport" type="tns:serviceTiresExportOpenUMLFeV1" minOccurs="0"/>
+                </xs:sequence>
+            </xs:complexType>
+        '''
+
+        servicesPayload = self['servicesOpenUMLFeV4']
+
+        if carryIn:
+            servicesPayload.carryIn = self['serviceCarryInOpenUMLFeV1']
+        
+        if cod:
+            codPayload = self['serviceCODOpenUMLFeV1']
+            codPayload.amount = cod
+            codPayload.currency = codCurrency
+            servicesPayload.cod = codPayload
+        
+        if cud:
+            servicesPayload.cud = self['serviceCUDOpenUMLeFV1']
+
+        if declaredValue:
+            dvPayload = self['serviceDeclaredValueOpenUMLFeV1']
+            dvPayload.amount = declaredValue
+            dvPayload.currency = declaredValueCurrency
+            servicesPayload.declaredValue = dvPayload
+        
+        if dedicatedDelivery:
+            servicesPayload.dedicatedDelivery = self['serviceDedicatedDeliveryOpenUMLFeV1']
+        
+        if documentsInternational:
+            servicesPayload.documentsInternational = self['serviceFlagOpenUMLF']
+        
+        if dox:
+            servicesPayload.dox = self['servicePalletOpenUMLFeV1']
+        
+        if duty:
+            dutyPayload = self['serviceDutyOpenUMLeFV2']
+            dutyPayload.amount = duty
+            dutyPayload.currency = dutyCurrency
+            servicesPayload.duty = serviceDutyOpenUMLeFV2           
+        
+        if dpdExpress:
+            servicesPayload.dpdExpress = self['serviceFlagOpenUMLF']
+        
+        if dpdPickup:
+            pudoPayload = self['serviceDpdPickupOpenUMLFeV1']
+            pudoPayload.pudo = dpdPickup
+            servicesPayload.dpdPickup = pudoPayload
+
+        if guarantee:
+            serviceGuaranteeTypeEnumOpenUMLFeV1 = [
+                'TIME0930',
+                'TIME1200',
+                'B2C',
+                'TIMEFIXED',
+                'SATURDAY',
+                'INTER',
+                'DPDNEXTDAY'
+            ]
+
+            if guarantee not in serviceGuaranteeTypeEnumOpenUMLFeV1:
+                raise ValueError(
+                    'guarantee should be on of: %s' % 
+                    ",".join(serviceGuaranteeTypeEnumOpenUMLFeV1)
+                )
+
+            if guarantee == 'TIMEFIXED' and not guaranteeValue:
+                raise ValueError('TIMEFIXED guarantee should also set guaranteeValue')
+            
+            sgPayload = self['serviceGuaranteeOpenUMLFeV1']
+            sgPayload.guarantee = self.get_from_factory(
+                'serviceGuaranteeTypeEnumOpenUMLFeV1')(guarantee)
+            
+            if guaranteeValue:
+                sgPayload.value = guaranteeValue
+            
+            servicesPayload.guarantee = sgPayload
+        
+        if inPers:
+            servicesPayload.inPers = self['serviceInPersOpenUMLFeV1']  
+
+        if pallet:
+            servicesPayload.pallet = self['servicePalletOpenUMLFeV1']  
+        
+        if privPers:
+            servicesPayload.privPers = self['servicePrivPersOpenUMLFeV1']  
+        
+        if rod:
+            servicesPayload.rod = self['serviceRODOpenUMLFeV1']  
+        
+        if selfCol:
+            if selfCol not in ['PRIV', 'COMP']:
+                raise ValueError('selfCol should be either PRIV or COMP')
+
+            scPayload = self['serviceSelfColOpenUMLFeV1']
+            sgPayload.reciever = self.get_from_factory(
+                'serviceSelfColReceiverTypeEnumOpenUMLFeV1')(selfCol)
+
+            servicesPayload.selfCol = scPayload
+
+        if tires:
+            servicesPayload.tires = self['serviceTiresOpenUMLFeV1']  
+        
+        if tiresExport:
+            servicesPayload.tiresExport = self['serviceTiresExportOpenUMLFeV1']  
+
+        return servicesPayload
+
+    def GenerateSingleParcelShipment(self, openUMLFeV3, langCode='PL'):
+
+        return self.generatePackagesNumbersV4(
+            openUMLFeV3, self.generationPolicyPayload,
+            langCode, self.authPayload
+        )
+
     def GenerateMultiParcelShipment(self):
         '''
 
