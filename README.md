@@ -29,7 +29,7 @@ from dpd_info_client_api.api import DPDAPI
 DPD_ApiInstance = DPDAPI()
 ```
 
-### Setup and usage rest of the world :)
+### Setup for rest of the world :)
 
 ```
 from dpd_info_client_api.api import DPDAPI
@@ -45,17 +45,36 @@ DPDApiSettings.DPD_API_SANDBOX_USERNAME = 'foo'
 DPDApiSettings.DPD_API_SANDBOX_PASSWORD = 'bar'
 DPDApiSettings.DPD_API_SANDBOX_FID = '4321'
 
-DPD_ApiInstance = DPDAPI(settings=DPDApiSettings) #we're not executing default init
+DPD_ApiInstance = DPDAPI(settings=DPDApiSettings)
 
 ```
 That should be working at this moment.
 
+### Ok, what should i do next ??
+In most use cases you will need to set shipping address. It's used in generating parcels and waybills.
+You can also pass senderData to required methods if that's varying between shipments.
+
+```
+DPD_ApiInstance.setPickupAddress({
+    'address': 'Street Name 1',
+    'city': 'City Name',
+    'company': 'Hal Zero Coders',
+    'countryCode': 'PL',
+    'email': 'office@g-labs.pl',
+    'fid': '123123',
+    'phone': 'Your Phone NO',
+    'postalCode': '00-999'
+})
+```
+
 
 ### What's going on around here ?
-Generally DPD API is preety complicated in compatision do various other API's so i've done most of the gorund work for you.
+Generally DPD API is preety complicated in comparision to various other API's so i've done most of the gorund work for you.
 Two most often used methods are prewrapped and ready to go.
+
 - generateSingleParcelShipment
 - generateSpedLabels
+
 
 ### Dude - i need something to paste ...
 ```
