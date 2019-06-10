@@ -50,7 +50,7 @@ DPD_ApiInstance = DPDAPI(settings=DPDApiSettings)
 ```
 That should be working at this moment.
 
-### Ok, what should i do next ??
+### Setting the sender address.
 In most use cases you will need to set shipping address. It's used in generating parcels and waybills.
 You can also pass senderData to required methods if that's varying between shipments.
 
@@ -60,26 +60,166 @@ DPD_ApiInstance.setPickupAddress({
     'city': 'City Name',
     'company': 'Hal Zero Coders',
     'countryCode': 'PL',
-    'email': 'office@g-labs.pl',
+    'email': 'office@mymail.com',
     'fid': '123123',
     'phone': 'Your Phone NO',
     'postalCode': '00-999'
 })
 ```
 
+### Address data formating
+Address data should be passes as a dict like below.
 
-### What's going on around here ?
+```
+{
+    'address': [str], #Street Name and Number
+    'city': [str], #City name
+    'company': [str], #Company name
+    'countryCode': [str], #Country code - 'PL'
+    'email': [str], #Sender e-mail
+    'fid': [str], #FID - that's from DPD
+    'name': [str], #Person "First Name Last Name"
+    'phone': [str], #Phone No
+    'postalCode': [str] #Postal Code
+}
+```
+
+### Parcel data formating
+Parcel data should be passed as a dict like below.
+NONE of those are required. You can pass an empty dict and API is OK with that ....
+
+```
+{
+    'content': [str],
+    'customerData1': [str],
+    'customerData2': [str],
+    'customerData3': [str],
+    'reference': [str],
+    'sizeX': [int],
+    'sizeY': [int],
+    'sizeZ': [int],
+    'weight': [int, float, Decimal]
+}
+```
+
+
+### How do i send something ??
 Generally DPD API is preety complicated in comparision to various other API's so i've done most of the gorund work for you.
 Two most often used methods are prewrapped and ready to go.
 
-- generateSingleParcelShipment
-- generateSpedLabels
+- GenerateSingleParcelShipment
+- GenerateSpedLabels
 
-
-### Dude - i need something to paste ...
-```
 
 ```
+DPD_ApiInstance = DPDAPI()
+DPD_ApiInstance.setPickupAddress({
+    'address': 'Street Name 1',
+    'city': 'City Name',
+    'company': 'Hal Zero Coders',
+    'countryCode': 'PL',
+    'email': 'office@mymail.com',
+    'fid': '123123',
+    'phone': 'Your Phone NO',
+    'postalCode': '00-999'
+})
+
+sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
+    packageData = {'weight': 1},
+    recieverData = {
+        'address': 'Street Name 1',
+        'city': 'City Name',
+        'company': 'Hal Zero Coders',
+        'countryCode': 'PL',
+        'email': 'office@mymail.com',
+        'fid': '123123',
+        'phone': 'Your Phone NO',
+        'postalCode': '00-999'
+    },
+    servicesData={}
+)
+
+RESPONSE
+{
+    'Status': 'OK', #check that one it it's OK
+    'SessionId': 0000000000, #session id goes here
+    'BeginTime': None,
+    'EndTime': None,
+    'Packages': {
+        'Package': [
+            {
+                'Status': 'OK',
+                'PackageId': 0000000000, #packageId goes here
+                'Reference': None,
+                'ValidationDetails': None,
+                'Parcels': {
+                    'Parcel': [
+                        {
+                            'Status': 'OK',
+                            'ParcelId': 0000000, #parcelId goes here
+                            'Reference': None,
+                            'Waybill': 'FOO FOO FOO', #Waybill goes here
+                            'ValidationDetails': None
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
+
+if sendParcelQuery.Status != 'OK':
+    raise AssertionError('Wrong status response', sendParcelQuery)
+
+PACKAGE_ID = sendParcelQuery.Packages.Package[0].PackageId
+
+waybilPdfQuery = DPD_ApiInstance.generateSpedLabels(packageId=PACKAGE_ID)
+
+if waybilPdfQuery.statusInfo.status != 'OK':
+    raise AssertionError('Wrong waybill status response', waybilPdfQuery)
+
+waybilPdfData = waybilPdfQuery.documentData
+```
+
+### Ok, i need dome fancy added services to that !
+If you need those, check out parameters of getServicesPayload. ALL of the WSDL stuff is preprogrammed there.
+
+```
+recieversData = {
+    'address': 'Street Name 1',
+    'city': 'City Name',
+    'company': 'Hal Zero Coders',
+    'countryCode': 'PL',
+    'email': 'office@mymail.com',
+    'fid': '123123',
+    'phone': 'Your Phone NO',
+    'postalCode': '00-999'
+}
+
+
+*COD ?*
+sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
+    packageData = {'weight': 1},
+    recieverData = recieversData,
+    servicesData={'cod': 12.99, 'codCurrency': 'PLN'}
+)
+
+
+*declaredValue ?*
+sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
+    packageData = {'weight': 1},
+    recieverData = recieversData,
+    servicesData={'declaredValue': 12.99, 'declaredValueCurrency': 'PLN'}
+)
+
+*Pallet shipment*
+sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
+    packageData = {'weight': 120, 'sizeX': 80, 'sizeY': 120},
+    recieverData = recieversData,
+    servicesData={'pallet': True}
+)
+```
+
 
 ## Where is the factory and service ?!
 
