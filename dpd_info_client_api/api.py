@@ -546,7 +546,7 @@ class DPDAPI(object):
             langCode, self.authPayload
         )
 
-    def generateSpedLabels(self, 
+    def GenerateSpedLabels(self, 
             packageId=None,
             reference=None,
             waybill=None,
