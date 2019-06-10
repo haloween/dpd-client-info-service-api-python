@@ -29,6 +29,7 @@ class DPDAPI(object):
     service = None
     factory = None
     generation_policy = 1
+    pickup_address = None
 
     def __init__(self, useTest=False, initZeep=True, settings=django_settings):
         self.useTest = useTest
@@ -139,6 +140,7 @@ class DPDAPI(object):
         '''
             Enable verbose ZEEP debugging.
         '''
+
         logging.config.dictConfig({
             'version': 1,
             'formatters': {
@@ -227,6 +229,13 @@ class DPDAPI(object):
             raise ValueError('Pick valid generation policy - choices are: %s' % gp)
 
         self.generation_policy = generation_policy
+    
+    def setPickupAddress(self, pickup_address):
+        '''
+            Set parcel pickup address for all requests.
+        '''
+        self.pickup_address = self.getAdressPayload(**pickup_address)
+        return self.pickup_address
 
     @property
     def authPayload(self):
@@ -348,6 +357,10 @@ class DPDAPI(object):
 
         self.__validateFunctionArgs(ARG_VALIDATE, kwargs)
 
+        #fix postal code
+        if 'postalCode' in kwargs and '-' in kwargs['postalCode']:
+            kwargs['postalCode'] = kwargs['postalCode'].replace('-', '')
+
         addressPayload = self['packageAddressOpenUMLFeV1']
 
         for k,v in kwargs.items():
@@ -358,47 +371,23 @@ class DPDAPI(object):
     def getServicesPayload(self, 
             carryIn = False, #carry in service - left for reference
             cod = False, codCurrency='PLN', #Cash On Delivery - specify amount
-            cud = False, #Collecy upon Delivery
+            cud = False, #Collect upon Delivery
             declaredValue = None, declaredValueCurrency='PLN', #Declared Parcel Value 
-            dedicatedDelivery = False,
-            documentsInternational = False,
-            dox = False,
-            dpdExpress = False,
-            dpdPickup = False,
+            dedicatedDelivery = False, #dedicated delivery service
+            documentsInternational = False, #international documents
+            dox = False, #documents shipping service (envelope up to 0.5 kg)
+            dpdExpress = False,  #international air freight
+            dpdPickup = False, #delivery to pickup point
             duty = None, dutyCurrency = 'PLN', #DUTY
-            guarantee = False, guaranteeValue = None,
-            inPers = False,
-            pallet = False,
-            privPers = False,
-            rod = False,
-            selfCol = False,
-            tires = False,
-            tiresExport = False
+            guarantee = False, guaranteeValue = None, #guarantee of timed delivery TIME0930, TIME1200, B2C, TIMEFIXED, SATURDAY, INTER, DPDNEXTDAY
+            inPers = False, #Pickup validation - required ID
+            pallet = False, #Pallet Shipment
+            privPers = False, #Delivery to Private Person
+            rod = False, #Return on delivery - documents ?
+            selfCol = False, #Self collect in depot
+            tires = False, #tires
+            tiresExport = False #export tires
         ):
-        '''
-            <xs:complexType name="servicesOpenUMLFeV4">
-                <xs:sequence>
-                    <xs:element name="carryIn" type="tns:serviceCarryInOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="cod" type="tns:serviceCODOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="cud" type="tns:serviceCUDOpenUMLeFV1" minOccurs="0"/>
-                    <xs:element name="declaredValue" type="tns:serviceDeclaredValueOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="dedicatedDelivery" type="tns:serviceDedicatedDeliveryOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="documentsInternational" type="tns:serviceFlagOpenUMLF" minOccurs="0"/>
-                    <xs:element name="dox" type="tns:servicePalletOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="dpdExpress" type="tns:serviceFlagOpenUMLF" minOccurs="0"/>
-                    <xs:element name="dpdPickup" type="tns:serviceDpdPickupOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="duty" type="tns:serviceDutyOpenUMLeFV2" minOccurs="0"/>
-                    <xs:element name="guarantee" type="tns:serviceGuaranteeOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="inPers" type="tns:serviceInPersOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="pallet" type="tns:servicePalletOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="privPers" type="tns:servicePrivPersOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="rod" type="tns:serviceRODOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="selfCol" type="tns:serviceSelfColOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="tires" type="tns:serviceTiresOpenUMLFeV1" minOccurs="0"/>
-                    <xs:element name="tiresExport" type="tns:serviceTiresExportOpenUMLFeV1" minOccurs="0"/>
-                </xs:sequence>
-            </xs:complexType>
-        '''
 
         servicesPayload = self['servicesOpenUMLFeV4']
 
@@ -456,13 +445,13 @@ class DPDAPI(object):
 
             if guarantee not in serviceGuaranteeTypeEnumOpenUMLFeV1:
                 raise ValueError(
-                    'guarantee should be on of: %s' % 
+                    'servicesPayload guarantee should be on of: %s' % 
                     ",".join(serviceGuaranteeTypeEnumOpenUMLFeV1)
                 )
 
             if guarantee == 'TIMEFIXED' and not guaranteeValue:
                 raise ValueError('TIMEFIXED guarantee should also set guaranteeValue')
-            
+
             sgPayload = self['serviceGuaranteeOpenUMLFeV1']
             sgPayload.guarantee = self.get_from_factory(
                 'serviceGuaranteeTypeEnumOpenUMLFeV1')(guarantee)
@@ -486,7 +475,7 @@ class DPDAPI(object):
         
         if selfCol:
             if selfCol not in ['PRIV', 'COMP']:
-                raise ValueError('selfCol should be either PRIV or COMP')
+                raise ValueError('servicesPayload selfCol should be either PRIV or COMP')
 
             scPayload = self['serviceSelfColOpenUMLFeV1']
             sgPayload.reciever = self.get_from_factory(
@@ -501,21 +490,22 @@ class DPDAPI(object):
             servicesPayload.tiresExport = self['serviceTiresExportOpenUMLFeV1']  
 
         return servicesPayload
-    
+
     PAYER_TYPE = ['SENDER', 'RECEIVER', 'THIRD_PARTY']
 
     def GenerateSingleParcelShipment(self, 
-            parcelData, 
+            packageData, 
             recieverData, 
             servicesData, 
-            senderData,
+            senderData = None,
             payerType = 'SENDER',
             ref1 = None,
             ref2 = None,
             ref3 = None,
             reference = None,
             thirdPartyFID = None,
-            langCode = 'PL'
+            langCode = 'PL',
+            returnPayload = False
         ):
 
         if payerType not in self.PAYER_TYPE:
@@ -525,36 +515,125 @@ class DPDAPI(object):
 
         packageOpenUMLFeV3 = self['packageOpenUMLFeV3']
 
-        packageOpenUMLFeV3.parcels = self.getPackagePayload(**parcelData)
+        packageOpenUMLFeV3.parcels = self.getPackagePayload(**packageData)
         packageOpenUMLFeV3.receiver = self.getAdressPayload(**recieverData)
         packageOpenUMLFeV3.services = self.getServicesPayload(**servicesData)
-        packageOpenUMLFeV3.sender = self.getAdressPayload(**senderData)
         
+        if senderData:
+            packageOpenUMLFeV3.sender = self.getAdressPayload(**senderData)
+        else:
+            if not self.pickup_address:
+                raise UnboundLocalError('Sender address is not defined, either provide senderData argument or setPickupAddress')
+
+            packageOpenUMLFeV3.sender = self.pickup_address
+
         packageOpenUMLFeV3.payerType = self.get_from_factory('payerTypeEnumOpenUMLFeV1')(payerType)
 
         ref1 and setattr(packageOpenUMLFeV3, 'ref1', ref1)
         ref2 and setattr(packageOpenUMLFeV3, 'ref2', ref2)
         ref3 and setattr(packageOpenUMLFeV3, 'ref3', ref3)
+
         reference and setattr(packageOpenUMLFeV3, 'reference', reference)
         thirdPartyFID and setattr(packageOpenUMLFeV3, 'thirdPartyFID', thirdPartyFID)
-        
+
         openUMLFeV3.packages = [packageOpenUMLFeV3]
+
+        if returnPayload:
+            return [openUMLFeV3, self.generationPolicyPayload, langCode, self.authPayload]
 
         return self.generatePackagesNumbersV4(
             openUMLFeV3, self.generationPolicyPayload,
             langCode, self.authPayload
         )
 
-    def GenerateMultiParcelShipment(self):
-        '''
+    def generateSpedLabels(self, 
+            packageId=None,
+            reference=None,
+            waybill=None,
+            sessionType='DOMESTIC',
+            senderData=None,
+            outputDocFormat='PDF',
+            docPageFormat='LBL_PRINTER',
+            outputLabelType='BIC3',
+            labelVariant=None,
+            returnPayload=False
+        ):
+        
+        if not packageId and not reference and not waybill:
+            raise AttributeError('One of packageId, reference or waybill is required !')
 
-        '''
+        dpdServicesParamsPayload = self['dpdServicesParamsV1']
+        dpdServicesParamsPayload.policy = self.generationPolicyPayload
 
-        uml = da['openUMLFeV3']
+        if senderData:
+            dpdServicesParamsPayload.pickupAddress = self.getAdressPayload(**senderData)
+        else:
+            if not self.pickup_address:
+                raise UnboundLocalError('Sender address is not defined, either provide senderData argument or setPickupAddress')
 
+            dpdServicesParamsPayload.pickupAddress = self.pickup_address
+        
+        SESSION_TYPES = ['DOMESTIC', 'INTERNATIONAL']
+        if sessionType not in SESSION_TYPES:
+            raise ValueError('sessionType should be one of: %s' % ",".join(SESSION_TYPES))
 
-        pass
+        sessionPayload = self['sessionDSPV1']
+        sessionPayload.sessionType = self.get_from_factory('sessionTypeDSPEnumV1')(sessionType)
 
-    def GrabLabel(self, shipping_number):
+        packagePayload = self['packageDSPV1']
 
-        pass
+        if packageId:
+            packagePayload.packageId = packageId
+        
+        if reference:
+            packagePayload.reference = reference
+        
+        if waybill:
+            parcelPayload = self['parcelDSPV1']
+            parcelPayload.waybill = waybill
+            packagePayload.parcels.append(parcelPayload)
+
+        sessionPayload.packages = packagePayload
+        
+        dpdServicesParamsPayload.session = sessionPayload
+
+        OUTPUT_DOC = ['PDF', 'TIFF', 'PS', 'EPL', 'ZPL']
+        if outputDocFormat not in OUTPUT_DOC:
+            raise ValueError('outputDocFormat should be one of: %s' % ",".join(OUTPUT_DOC))
+
+        outputDocFormatDSPEnumPayload = self.get_from_factory('outputDocFormatDSPEnumV1')(outputDocFormat)
+
+        PAGE_FORMATS = ['A4' ,'LBL_PRINTER']
+        if docPageFormat not in PAGE_FORMATS:
+            raise ValueError('docPageFormat should be one of: %s' % ",".join(PAGE_FORMATS))
+
+        outputDocPageFormatDSPEnumPayload = self.get_from_factory('outputDocPageFormatDSPEnumV1')(docPageFormat)
+
+        OUTPUT_TYPES = ['BIC3' ,'EXTENDED']
+        if outputLabelType not in OUTPUT_TYPES:
+            raise ValueError('outputLabelType should be one of: %s' % ",".join(OUTPUT_TYPES))
+
+        outputLabelTypePayload = self.get_from_factory('outputLabelTypeEnumV1')(outputLabelType)
+
+        LABEL_VARIANTS = [None, 'APOLLO', 'RUCH']
+        if labelVariant not in LABEL_VARIANTS:
+            raise ValueError('labelVariant should be one of: %s' % ",".join(LABEL_VARIANTS))
+
+        if returnPayload:
+            return [
+                dpdServicesParamsPayload, 
+                outputDocFormatDSPEnumPayload,
+                outputDocPageFormatDSPEnumPayload,
+                outputLabelTypePayload,
+                labelVariant,
+                self.authPayload
+            ]
+
+        return self.generateSpedLabelsV4(
+            dpdServicesParamsPayload,
+            outputDocFormatDSPEnumPayload,
+            outputDocPageFormatDSPEnumPayload,
+            outputLabelTypePayload,
+            labelVariant,
+            self.authPayload
+        )
