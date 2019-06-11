@@ -179,7 +179,7 @@ DPD_ApiInstance.setPickupAddress(SENDER_DATA)
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = PACKAGE_DATA,
     recieverData = RECIPIENT_DATA,
-    servicesData={}
+    servicesData = {}
 )
 
 RESPONSE
@@ -225,14 +225,39 @@ waybilPdfData = waybilPdfQuery.documentData
 ```
 
 ### Ok, i need dome fancy added services to that !
-If you need those, check out parameters of getServicesPayload. ALL of the WSDL stuff is preprogrammed there.
+If you need those, check out parameters of getServicesPayload. 
+ALL of the WSDL stuff is preprogrammed there.
+
+Check out all the service options below.
+```
+getServicesPayload(self,
+    carryIn = False, #carry in service - left for reference
+    cod = False, codCurrency='PLN', #Cash On Delivery - specify amount
+    cud = False, #Collect upon Delivery
+    declaredValue = None, declaredValueCurrency='PLN', #Declared Parcel Value 
+    dedicatedDelivery = False, #dedicated delivery service
+    documentsInternational = False, #international documents
+    dox = False, #documents shipping service (envelope up to 0.5 kg)
+    dpdExpress = False,  #international air freight
+    dpdPickup = False, #delivery to pickup point
+    duty = None, dutyCurrency = 'PLN', #DUTY
+    guarantee = False, guaranteeValue = None, #guarantee of timed delivery TIME0930, TIME1200, B2C, TIMEFIXED, SATURDAY, INTER, DPDNEXTDAY
+    inPers = False, #Pickup validation - required ID
+    pallet = False, #Pallet Shipment
+    privPers = False, #Delivery to Private Person
+    rod = False, #Return on delivery - documents ?
+    selfCol = False, #Self collect in depot
+    tires = False, #tires
+    tiresExport = False #export tires
+)
+```
 
 ### Cash on Delivery
 ```
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = PACKAGE_DATA,
     recieverData = RECIPIENT_DATA,
-    servicesData={'cod': 12.99, 'codCurrency': 'PLN'}
+    servicesData = {'cod': 12.99, 'codCurrency': 'PLN'}
 )
 ```
 
@@ -241,7 +266,7 @@ sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = PACKAGE_DATA,
     recieverData = RECIPIENT_DATA,
-    servicesData= {'declaredValue': 12.99, 'declaredValueCurrency': 'PLN'}
+    servicesData = {'declaredValue': 12.99, 'declaredValueCurrency': 'PLN'}
 )
 ```
 
@@ -251,7 +276,7 @@ sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = {'weight': 120, 'sizeX': 80, 'sizeY': 120},
     recieverData = recieversData,
-    servicesData={'pallet': True}
+    servicesData = {'pallet': True}
 )
 ```
 
