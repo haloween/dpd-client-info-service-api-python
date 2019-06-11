@@ -11,7 +11,6 @@ pip install  dpd_info_client_api
 
 Define following variables in your project settings:
 
-For e-nadawca:
 * DPD_API_USERNAME
 * DPD_API_PASSWORD
 * DPD_API_FID
@@ -68,8 +67,22 @@ DPD_ApiInstance.setPickupAddress({
 ```
 
 ### Address data formating
-Address data should be passes as a dict like below.
+All addresses should be passed as a dict like below {attributeName: [type(value)]}.
 
+```
+{
+    'address': 'Street Name',
+    'city': 'City Name',
+    'company': 'Company Name',
+    'countryCode': 'PL',
+    'email': 'shoe size',
+    'fid': 'FID',
+    'phone': 'Phone',
+    'postalCode': 'zip code'
+}
+```
+
+Input is validated against:
 ```
 {
     'address': [str], #Street Name and Number
@@ -85,9 +98,32 @@ Address data should be passes as a dict like below.
 ```
 
 ### Parcel data formating
-Parcel data should be passed as a dict like below.
-NONE of those are required. You can pass an empty dict and API is OK with that ....
+Parcel data should be passed as a dictionary {}.
+NONE of those are required. You can pass an empty dict and API is OK with that ...
+It's recommended to provide AT LEAST WEIGHT:
 
+Full blown example below:
+```
+{
+    'content': 'Nuclear Reactor',
+    'customerData1': 'VVER V-320',
+    'customerData2': 'Working Condition',
+    'customerData3': 'No control Rods',
+    'reference': 'My reference 123',
+    'sizeX': 2000,
+    'sizeY': 3000,
+    'sizeZ': 5000,
+    'weight': 3500
+}
+
+That will also work !
+{
+    'weight': 3500
+}
+
+```
+
+Input is validated against:
 ```
 {
     'content': [str],
@@ -104,7 +140,7 @@ NONE of those are required. You can pass an empty dict and API is OK with that .
 
 
 ### How do i send something ??
-Generally DPD API is preety complicated in comparision to various other API's so i've done most of the gorund work for you.
+Generally DPD API is preety complicated in comparision to various other API's so i've done most of the ground work for you.
 Two most often used methods are prewrapped and ready to go.
 
 - GenerateSingleParcelShipment
@@ -112,8 +148,8 @@ Two most often used methods are prewrapped and ready to go.
 
 
 ```
-DPD_ApiInstance = DPDAPI()
-DPD_ApiInstance.setPickupAddress({
+
+SENDER_DATA = {
     'address': 'Street Name 1',
     'city': 'City Name',
     'company': 'Hal Zero Coders',
@@ -122,20 +158,27 @@ DPD_ApiInstance.setPickupAddress({
     'fid': '123123',
     'phone': 'Your Phone NO',
     'postalCode': '00-999'
-})
+}
+
+PACKAGE_DATA = {'weight': 1}
+
+RECIPIENT_DATA = {
+    'address': 'Street Name 1',
+    'city': 'City Name',
+    'company': 'Hal Zero Coders',
+    'countryCode': 'PL',
+    'email': 'office@mymail.com',
+    'fid': '123123',
+    'phone': 'Your Phone NO',
+    'postalCode': '00-999'
+}
+
+DPD_ApiInstance = DPDAPI()
+DPD_ApiInstance.setPickupAddress(SENDER_DATA)
 
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
-    packageData = {'weight': 1},
-    recieverData = {
-        'address': 'Street Name 1',
-        'city': 'City Name',
-        'company': 'Hal Zero Coders',
-        'countryCode': 'PL',
-        'email': 'office@mymail.com',
-        'fid': '123123',
-        'phone': 'Your Phone NO',
-        'postalCode': '00-999'
-    },
+    packageData = PACKAGE_DATA,
+    recieverData = RECIPIENT_DATA,
     servicesData={}
 )
 
@@ -184,42 +227,33 @@ waybilPdfData = waybilPdfQuery.documentData
 ### Ok, i need dome fancy added services to that !
 If you need those, check out parameters of getServicesPayload. ALL of the WSDL stuff is preprogrammed there.
 
+### Cash on Delivery
 ```
-recieversData = {
-    'address': 'Street Name 1',
-    'city': 'City Name',
-    'company': 'Hal Zero Coders',
-    'countryCode': 'PL',
-    'email': 'office@mymail.com',
-    'fid': '123123',
-    'phone': 'Your Phone NO',
-    'postalCode': '00-999'
-}
-
-
-*COD ?*
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
-    packageData = {'weight': 1},
-    recieverData = recieversData,
+    packageData = PACKAGE_DATA,
+    recieverData = RECIPIENT_DATA,
     servicesData={'cod': 12.99, 'codCurrency': 'PLN'}
 )
+```
 
-
-*declaredValue ?*
+### Declared Value
+```
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
-    packageData = {'weight': 1},
-    recieverData = recieversData,
-    servicesData={'declaredValue': 12.99, 'declaredValueCurrency': 'PLN'}
+    packageData = PACKAGE_DATA,
+    recieverData = RECIPIENT_DATA,
+    servicesData= {'declaredValue': 12.99, 'declaredValueCurrency': 'PLN'}
 )
+```
 
-*Pallet shipment*
+
+### Pallet shipment
+```
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = {'weight': 120, 'sizeX': 80, 'sizeY': 120},
     recieverData = recieversData,
     servicesData={'pallet': True}
 )
 ```
-
 
 ## Where is the factory and service ?!
 
