@@ -560,8 +560,8 @@ class DPDAPI(object):
             returnPayload=False
         ):
         
-        if not packageId and not reference and not waybill:
-            raise AttributeError('One of packageId, reference or waybill is required !')
+        if not packageId and not reference and not waybill and not sessionId:
+            raise AttributeError('One of packageId, reference, waybill or sessionId is required !')
 
         dpdServicesParamsPayload = self['dpdServicesParamsV1']
         dpdServicesParamsPayload.policy = self.generationPolicyPayload
@@ -635,5 +635,70 @@ class DPDAPI(object):
             outputDocPageFormatDSPEnumPayload,
             outputLabelTypePayload,
             labelVariant,
+            self.authPayload
+        )
+    
+    def generateProtocol(self, 
+            waybills,
+            sessionType='DOMESTIC',
+            senderData=None,
+            outputDocFormat='PDF',
+            docPageFormat='LBL_PRINTER',
+            returnPayload=False
+        ):
+
+        dpdServicesParamsPayload = self['dpdServicesParamsV1']
+        dpdServicesParamsPayload.policy = self.generationPolicyPayload
+
+        if senderData:
+            dpdServicesParamsPayload.pickupAddress = self.getAdressPayload(**senderData)
+        else:
+            if not self.pickup_address:
+                raise UnboundLocalError('Sender address is not defined, either provide senderData argument or setPickupAddress')
+
+            dpdServicesParamsPayload.pickupAddress = self.pickup_address
+
+        SESSION_TYPES = ['DOMESTIC', 'INTERNATIONAL']
+        if sessionType not in SESSION_TYPES:
+            raise ValueError('sessionType should be one of: %s' % ",".join(SESSION_TYPES))
+
+        sessionPayload = self['sessionDSPV1']
+        sessionPayload.sessionType = self.get_from_factory('sessionTypeDSPEnumV1')(sessionType)
+
+        packagePayload = self['packageDSPV1']
+
+        for waybill in waybills:
+            parcelPayload = self['parcelDSPV1']
+            parcelPayload.waybill = waybill
+            packagePayload.parcels.append(parcelPayload)
+
+        sessionPayload.packages = packagePayload
+
+        dpdServicesParamsPayload.session = sessionPayload
+
+        OUTPUT_DOC = ['PDF', 'TIFF', 'PS', 'EPL', 'ZPL']
+        if outputDocFormat not in OUTPUT_DOC:
+            raise ValueError('outputDocFormat should be one of: %s' % ",".join(OUTPUT_DOC))
+
+        outputDocFormatDSPEnumPayload = self.get_from_factory('outputDocFormatDSPEnumV1')(outputDocFormat)
+
+        PAGE_FORMATS = ['A4' ,'LBL_PRINTER']
+        if docPageFormat not in PAGE_FORMATS:
+            raise ValueError('docPageFormat should be one of: %s' % ",".join(PAGE_FORMATS))
+
+        outputDocPageFormatDSPEnumPayload = self.get_from_factory('outputDocPageFormatDSPEnumV1')(docPageFormat)
+
+        if returnPayload:
+            return [
+                dpdServicesParamsPayload, 
+                outputDocFormatDSPEnumPayload,
+                outputDocPageFormatDSPEnumPayload,
+                self.authPayload
+            ]
+
+        return self.generateProtocolV2(
+            dpdServicesParamsPayload,
+            outputDocFormatDSPEnumPayload,
+            outputDocPageFormatDSPEnumPayload,            
             self.authPayload
         )
