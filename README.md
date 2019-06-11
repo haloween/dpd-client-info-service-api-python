@@ -1,5 +1,6 @@
 # dpd-client-info-service-api-python
-Python API Client Library for DPD Info and Client service in Poland.  It allows parcel / shipping label generation and parcel tracking.
+Python API Client Library for DPD Info and Client service in Poland. 
+It allows parcel / shipping label generation.
 
 
 ### Installation
@@ -82,7 +83,7 @@ All addresses should be passed as a dict like below {attributeName: [type(value)
 }
 ```
 
-Input is validated against:
+Provided dict is validated against:
 ```
 {
     'address': [str], #Street Name and Number
@@ -123,7 +124,7 @@ That will also work !
 
 ```
 
-Input is validated against:
+Provided dict is validated against:
 ```
 {
     'content': [str],
@@ -144,7 +145,7 @@ Generally DPD API is preety complicated in comparision to various other API's so
 Two most often used methods are prewrapped and ready to go.
 
 - GenerateSingleParcelShipment
-- GenerateSpedLabels
+- GenerateSpedLabel
 
 
 ```
@@ -168,7 +169,6 @@ RECIPIENT_DATA = {
     'company': 'Hal Zero Coders',
     'countryCode': 'PL',
     'email': 'office@mymail.com',
-    'fid': '123123',
     'phone': 'Your Phone NO',
     'postalCode': '00-999'
 }
@@ -211,24 +211,21 @@ RESPONSE
     }
 }
 
-if sendParcelQuery.Status != 'OK':
-    raise AssertionError('Wrong status response', sendParcelQuery)
+assert sendParcelQuery.Status == 'OK', 'Wrong status response' % sendParcelQuery
 
 PACKAGE_ID = sendParcelQuery.Packages.Package[0].PackageId
 
-waybilPdfQuery = DPD_ApiInstance.generateSpedLabels(packageId=PACKAGE_ID)
+waybilPdfQuery = DPD_ApiInstance.generateSpedLabel(packageId=PACKAGE_ID)
 
-if waybilPdfQuery.statusInfo.status != 'OK':
-    raise AssertionError('Wrong waybill status response', waybilPdfQuery)
+assert waybilPdfQuery.statusInfo.status == 'OK', Wrong waybill status response: %s' % waybilPdfQuery
 
 waybilPdfData = waybilPdfQuery.documentData
 ```
 
 ### Ok, i need dome fancy added services to that !
-If you need those, check out parameters of getServicesPayload. 
-ALL of the WSDL stuff is preprogrammed there.
-
+If you need those, you can check out getServicesPayload. ALL of the WSDL stuff is preprogrammed there.
 Check out all the service options below.
+
 ```
 getServicesPayload(self,
     carryIn = False, #carry in service - left for reference
@@ -252,7 +249,7 @@ getServicesPayload(self,
 )
 ```
 
-### Cash on Delivery
+### Example parcel with Cash on Delivery
 ```
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = PACKAGE_DATA,
@@ -261,7 +258,7 @@ sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
 )
 ```
 
-### Declared Value
+### Example parcel with Declared Value
 ```
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = PACKAGE_DATA,
@@ -271,7 +268,7 @@ sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
 ```
 
 
-### Pallet shipment
+### Example pallet shipment
 ```
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = {'weight': 120, 'sizeX': 80, 'sizeY': 120},
@@ -295,13 +292,13 @@ DPD_ApiInstance['serviceSelfColOpenUMLFeV1']
 ```
 
 I get an error like XXXX takes exactly 1 argument (0 given). Simple types expect only a single value argument
+Try that instead:
 
 ```
 DPD_ApiInstance.get_from_factory('sessionTypeDSPEnumV1')(propertyValue)
 ```
 
 Service methods are also avaliable DIRECTLY on instance. They're rewired after execution of init_zeep.
-WARNING ! Example below does not work it only shows few simple calls.
 
 ```
 DPD_ApiInstance.findPostalCode("00-999")
@@ -310,7 +307,7 @@ DPD_ApiInstance.findPostalCode("00-999")
 ### I want testing Enviroment ...
 
 Class init uses following key arguments:
-DPDAPI(useTest=False, useLabs=False, initZeep=True)
+DPDAPI(useTest=False, initZeep=True)
 
 * useTest (default -> False) - run the calls against sandbox credentials and WSDL
 * initZeep (default -> True) - initialize zeep on init.

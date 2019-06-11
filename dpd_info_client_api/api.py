@@ -536,7 +536,7 @@ class DPDAPI(object):
         reference and setattr(packageOpenUMLFeV3, 'reference', reference)
         thirdPartyFID and setattr(packageOpenUMLFeV3, 'thirdPartyFID', thirdPartyFID)
 
-        openUMLFeV3.packages = [packageOpenUMLFeV3]
+        openUMLFeV3.packages.append(packageOpenUMLFeV3)
 
         if returnPayload:
             return [openUMLFeV3, self.generationPolicyPayload, langCode, self.authPayload]
@@ -546,10 +546,11 @@ class DPDAPI(object):
             langCode, self.authPayload
         )
 
-    def GenerateSpedLabels(self, 
+    def GenerateSpedLabel(self, 
             packageId=None,
             reference=None,
             waybill=None,
+            sessionId=None,
             sessionType='DOMESTIC',
             senderData=None,
             outputDocFormat='PDF',
@@ -580,14 +581,13 @@ class DPDAPI(object):
         sessionPayload = self['sessionDSPV1']
         sessionPayload.sessionType = self.get_from_factory('sessionTypeDSPEnumV1')(sessionType)
 
+        sessionId and setattr(sessionPayload, 'sessionId', sessionId)
+
         packagePayload = self['packageDSPV1']
 
-        if packageId:
-            packagePayload.packageId = packageId
-        
-        if reference:
-            packagePayload.reference = reference
-        
+        packageId and setattr(packagePayload, 'packageId', packageId)
+        reference and setattr(packagePayload, 'reference', reference)
+
         if waybill:
             parcelPayload = self['parcelDSPV1']
             parcelPayload.waybill = waybill
