@@ -702,3 +702,55 @@ class DPDAPI(object):
             outputDocPageFormatDSPEnumPayload,            
             self.authPayload
         )
+
+    def pickupCall(self, 
+            waybills,
+            senderData=None,            
+            returnPayload=False
+        ):
+
+        raise NotImplementedError('Function is not implemented')
+
+        '''
+            <xs:complexType name="dpdPickupCallParamsV3">
+            <xs:sequence>
+            <xs:element name="checkSum" type="xs:int" minOccurs="0"/>
+            <xs:element name="operationType" type="tns:pickupCallOperationTypeDPPEnumV1" minOccurs="0"/>
+            <xs:element name="orderNumber" type="xs:string" minOccurs="0"/>
+            <xs:element name="orderType" type="tns:pickupCallOrderTypeDPPEnumV1" minOccurs="0"/>
+            <xs:element name="pickupCallSimplifiedDetails" type="tns:pickupCallSimplifiedDetailsDPPV1" minOccurs="0"/>
+            <xs:element name="pickupDate" type="xs:string" minOccurs="0"/>
+            <xs:element name="pickupTimeFrom" type="xs:string" minOccurs="0"/>
+            <xs:element name="pickupTimeTo" type="xs:string" minOccurs="0"/>
+            <xs:element name="updateMode" type="tns:pickupCallUpdateModeDPPEnumV1" minOccurs="0"/>
+            <xs:element name="waybillsReady" type="xs:boolean" minOccurs="0"/>
+            </xs:sequence>
+            </xs:complexType>
+        
+
+        dpdPickupCallParamsPayload = self['dpdPickupCallParamsV3']
+        
+        SESSION_TYPES = ['DOMESTIC', 'INTERNATIONAL']
+        if sessionType not in SESSION_TYPES:
+            raise ValueError('sessionType should be one of: %s' % ",".join(SESSION_TYPES))
+
+        sessionPayload = self['sessionDSPV1']
+        sessionPayload.sessionType = self.get_from_factory('sessionTypeDSPEnumV1')(sessionType)
+
+        packagePayload = self['packageDSPV1']
+
+        for waybill in waybills:
+            parcelPayload = self['parcelDSPV1']
+            parcelPayload.waybill = waybill
+            packagePayload.parcels.append(parcelPayload)
+
+        sessionPayload.packages = packagePayload
+
+        dpdServicesParamsPayload.session = sessionPayload
+
+
+        return self.packagesPickupCallV4(
+            dpdServicesParamsPayload,      
+            self.authPayload
+        )
+        '''

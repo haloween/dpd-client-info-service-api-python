@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='dpd_info_client_api',
-      version='0.2',
+      version='0.3',
       description='Client for DPD WSDL API.',
       url='https://github.com/haloween/dpd-client-info-service-api-python',
       keywords = "dpd, courier, api, service, info , parcel, shipping label, wsdl, api",

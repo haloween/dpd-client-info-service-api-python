@@ -173,7 +173,7 @@ class DPDInfoAPI(object):
 
         eventsSelectTypePayload = self.get_from_factory('eventsSelectTypeEnum')('ALL' if getAll else 'ONLY_LAST')
 
-        return self.getEventsForWaybillXV1(
+        return self.getEventsForWaybillV1(
             waybill, eventsSelectTypePayload, language, self.authPayload
         )
     
