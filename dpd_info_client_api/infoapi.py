@@ -15,7 +15,8 @@ class DPDInfoAPI(object):
         Class running DPD WSDL INFO WebApi.
     '''
 
-    PROD_API_WSDL = 'https://dpdinfoservices.dpd.com.pl/DPDInfoServicesXmlEventsService/DPDInfoServicesXmlEvents?wsdl'
+    PROD_API_WSDL_XML = 'https://dpdinfoservices.dpd.com.pl/DPDInfoServicesXmlEventsService/DPDInfoServicesXmlEvents?wsdl'
+    PROD_API_WSDL_OBJ = 'https://dpdinfoservices.dpd.com.pl/DPDInfoServicesObjEventsService/DPDInfoServicesObjEvents?wsdl'
     PROD_USERNAME = None
     PROD_PASSWORD = None
 
@@ -23,9 +24,10 @@ class DPDInfoAPI(object):
     service = None
     factory = None
 
-    def __init__(self, initZeep=True, settings=django_settings):
+    def __init__(self, initZeep=True, settings=django_settings, xmlMode=False):
         
         #sorry for that but i liked it from JS 
+        self.xmlMode = xmlMode
         settings and self.set_config(settings)
         initZeep and self.init_zeep()
 
@@ -83,7 +85,7 @@ class DPDInfoAPI(object):
         self.check_config()
 
         #wrapped client
-        self.client = zeep.Client(self.PROD_API_WSDL)
+        self.client = zeep.Client(self.PROD_API_WSDL_XML if self.xmlMode else self.PROD_API_WSDL_OBJ)
         self.factory = self.client.type_factory('ns0')
 
         self.s = self.client.service
@@ -165,7 +167,7 @@ class DPDInfoAPI(object):
 
     def getEventsForCustomer(self, limit=100, language='PL'):
 
-        return self.getEventsForCustomerXV4(
+        return self.getEventsForCustomerV4(
             limit, language, self.authPayload
         )
     
