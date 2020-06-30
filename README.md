@@ -3,13 +3,13 @@ Python API Client Library for DPD Info and Client service in Poland.
 It allows parcel / shipping label generation.
 It's mandatory to contact your DPD representative and ask them to enable API access.
 
-### Installation
+## Installation
 
 ```bash
 pip install  dpd_info_client_api
 ```
 
-### Setup and usage with Django
+## Setup and usage with Django
 
 Define following variables in your project settings:
 
@@ -29,7 +29,7 @@ from dpd_info_client_api.api import DPDAPI
 DPD_ApiInstance = DPDAPI()
 ```
 
-### Setup for rest of the world :)
+## Setup for rest of the world :)
 
 ```python
 from dpd_info_client_api.api import DPDAPI
@@ -55,7 +55,7 @@ That should be working at this moment.
 
 Contact your DPD representative and ask them to enable API access.
 
-### Setting the sender address
+## Setting the sender address
 
 In most use cases you will need to set shipping address. It's used in generating parcels and waybills.
 You can also pass senderData to required methods if that's varying between shipments.
@@ -73,12 +73,12 @@ DPD_ApiInstance.setPickupAddress({
 })
 ```
 
-### Address data formating
+## Address data formating
 
 All addresses should be passed as a dict like below {attributeName: [type(value)]}.
 
 ```python
-{
+ADDRESS_DATA = {
     'address': 'Street Name',
     'city': 'City Name',
     'company': 'Company Name',
@@ -106,7 +106,7 @@ Provided dict is validated against:
 }
 ```
 
-### Parcel data formating
+## Parcel data formating
 
 Parcel data should be passed as a dictionary {}.
 NONE of those are required. You can pass an empty dict and API is OK with that ...
@@ -115,7 +115,7 @@ It's recommended to provide AT LEAST WEIGHT:
 Full blown example below:
 
 ```python
-{
+PACKAGE_DATA = {
     'content': 'Nuclear Reactor',
     'customerData1': 'VVER V-320',
     'customerData2': 'Working Condition',
@@ -126,12 +126,14 @@ Full blown example below:
     'sizeZ': 5000,
     'weight': 3500
 }
+```
 
-That will also work !
-{
+That will also work...
+
+```python
+PACKAGE_DATA = {
     'weight': 3500
 }
-
 ```
 
 Provided dict is validated against:
