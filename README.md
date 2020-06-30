@@ -1,10 +1,11 @@
 # dpd-client-info-service-api-python
-Python API Client Library for DPD Info and Client service in Poland. 
+Python API Client Library for DPD Info and Client service in Poland.
 It allows parcel / shipping label generation.
-
+It's mandatory to contact your DPD representative and ask them to enable API access.
 
 ### Installation
-```
+
+```bash
 pip install  dpd_info_client_api
 ```
 
@@ -20,10 +21,9 @@ Define following variables in your project settings:
 * DPD_API_SANDBOX_PASSWORD
 * DPD_API_SANDBOX_FID
 
-
 After that - use as follows:
 
-```
+```python
 from dpd_info_client_api.api import DPDAPI
 
 DPD_ApiInstance = DPDAPI()
@@ -31,7 +31,7 @@ DPD_ApiInstance = DPDAPI()
 
 ### Setup for rest of the world :)
 
-```
+```python
 from dpd_info_client_api.api import DPDAPI
 from dpd_info_client_api.settings import DPDSettingsObject
 
@@ -48,13 +48,19 @@ DPDApiSettings.DPD_API_SANDBOX_FID = '4321'
 DPD_ApiInstance = DPDAPI(settings=DPDApiSettings)
 
 ```
+
 That should be working at this moment.
 
-### Setting the sender address.
+### I get INCORRECT_LOGIN_OR_PASSWORD
+
+Contact your DPD representative and ask them to enable API access.
+
+### Setting the sender address
+
 In most use cases you will need to set shipping address. It's used in generating parcels and waybills.
 You can also pass senderData to required methods if that's varying between shipments.
 
-```
+```python
 DPD_ApiInstance.setPickupAddress({
     'address': 'Street Name 1',
     'city': 'City Name',
@@ -68,9 +74,10 @@ DPD_ApiInstance.setPickupAddress({
 ```
 
 ### Address data formating
+
 All addresses should be passed as a dict like below {attributeName: [type(value)]}.
 
-```
+```python
 {
     'address': 'Street Name',
     'city': 'City Name',
@@ -84,7 +91,8 @@ All addresses should be passed as a dict like below {attributeName: [type(value)
 ```
 
 Provided dict is validated against:
-```
+
+```python
 {
     'address': [str], #Street Name and Number
     'city': [str], #City name
@@ -99,12 +107,14 @@ Provided dict is validated against:
 ```
 
 ### Parcel data formating
+
 Parcel data should be passed as a dictionary {}.
 NONE of those are required. You can pass an empty dict and API is OK with that ...
 It's recommended to provide AT LEAST WEIGHT:
 
 Full blown example below:
-```
+
+```python
 {
     'content': 'Nuclear Reactor',
     'customerData1': 'VVER V-320',
@@ -125,7 +135,8 @@ That will also work !
 ```
 
 Provided dict is validated against:
-```
+
+```python
 {
     'content': [str],
     'customerData1': [str],
@@ -139,16 +150,15 @@ Provided dict is validated against:
 }
 ```
 
+### How do i send something
 
-### How do i send something ??
 Generally DPD API is preety complicated in comparision to various other API's so i've done most of the ground work for you.
 Two most often used methods are prewrapped and ready to go.
 
-- GenerateSingleParcelShipment
-- GenerateSpedLabel
+* GenerateSingleParcelShipment
+* GenerateSpedLabel
 
-
-```
+```python
 
 SENDER_DATA = {
     'address': 'Street Name 1',
@@ -222,11 +232,12 @@ assert waybilPdfQuery.statusInfo.status == 'OK', Wrong waybill status response: 
 waybilPdfData = waybilPdfQuery.documentData
 ```
 
-### Ok, i need dome fancy added services to that !
+### Ok, i need dome fancy added services to that
+
 If you need those, you can check out getServicesPayload. ALL of the WSDL stuff is preprogrammed there.
 Check out all the service options below.
 
-```
+```python
 getServicesPayload(self,
     carryIn = False, #carry in service - left for reference
     cod = False, codCurrency='PLN', #Cash On Delivery - specify amount
@@ -250,7 +261,8 @@ getServicesPayload(self,
 ```
 
 ### Example parcel with Cash on Delivery
-```
+
+```python
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = PACKAGE_DATA,
     recieverData = RECIPIENT_DATA,
@@ -259,7 +271,8 @@ sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
 ```
 
 ### Example parcel with Declared Value
-```
+
+```python
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = PACKAGE_DATA,
     recieverData = RECIPIENT_DATA,
@@ -267,9 +280,9 @@ sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
 )
 ```
 
-
 ### Example pallet shipment
-```
+
+```python
 sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
     packageData = {'weight': 120, 'sizeX': 80, 'sizeY': 120},
     recieverData = recieversData,
@@ -277,7 +290,7 @@ sendParcelQuery = DPD_ApiInstance.GenerateSingleParcelShipment(
 )
 ```
 
-## Where is the factory and service ?!
+## Where is the factory and service
 
 If you insist they're avaliable as .service and .factory on instances.
 
@@ -285,7 +298,7 @@ BUT
 
 Factory is exposed directly as dictionary on the API instance. It's avaliable after execution of init_zeep.
 
-```
+```python
 DPD_ApiInstance['sessionDSPV1']
 DPD_ApiInstance['packageOpenUMLFeV3']
 DPD_ApiInstance['serviceSelfColOpenUMLFeV1']
@@ -294,17 +307,17 @@ DPD_ApiInstance['serviceSelfColOpenUMLFeV1']
 I get an error like XXXX takes exactly 1 argument (0 given). Simple types expect only a single value argument
 Try that instead:
 
-```
+```python
 DPD_ApiInstance.get_from_factory('sessionTypeDSPEnumV1')(propertyValue)
 ```
 
 Service methods are also avaliable DIRECTLY on instance. They're rewired after execution of init_zeep.
 
-```
+```python
 DPD_ApiInstance.findPostalCode("00-999")
 ```
 
-### I want testing Enviroment ...
+### I want testing Enviroment
 
 Class init uses following key arguments:
 DPDAPI(useTest=False, initZeep=True)
@@ -312,15 +325,14 @@ DPDAPI(useTest=False, initZeep=True)
 * useTest (default -> False) - run the calls against sandbox credentials and WSDL
 * initZeep (default -> True) - initialize zeep on init.
 
+### I need to debug zeep
 
-### I need to debug zeep ...
-```
+```python
 DPD_ApiInstance.enable_zeep_debug()
 ```
 
-## Few examples of init: 
+### If you need the test enviroment
 
-#### If you need the test enviroment:
-```
+```python
 DPD_ApiInstance = DPDAPI(useTest=True)
 ```
